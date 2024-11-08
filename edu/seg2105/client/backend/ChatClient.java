@@ -44,6 +44,12 @@ public class ChatClient extends AbstractClient
   {
     super(host, port); //Call the superclass constructor
     this.clientUI = clientUI;
+    /*/
+     * create socket
+     * create output, outputstream
+     * create input, input stream
+     * creates client reader to read data from server
+     */
     openConnection();
   }
 
@@ -61,6 +67,22 @@ public class ChatClient extends AbstractClient
     
     
   }
+  
+  @Override
+  protected void connectionClosed() {
+	  if(!isConnected()) {
+      clientUI.display("Server has shut down. Client is exiting.");
+      System.exit(0);
+	  }
+  }
+  
+  @Override
+  protected void connectionException(Exception exception) {
+	  if(!isConnected()) {
+          clientUI.display("Connection exception: " + exception.getMessage());
+          System.exit(0);
+      }
+  }
 
   /**
    * This method handles all data coming from the UI            
@@ -71,6 +93,7 @@ public class ChatClient extends AbstractClient
   {
     try
     {
+    	//the only way a client should interact with server through a method
       sendToServer(message);
     }
     catch(IOException e)
@@ -80,6 +103,16 @@ public class ChatClient extends AbstractClient
       quit();
     }
   }
+  //@Override
+  //protected void connectionClosed() {
+	  
+	  //if()
+	  
+	//}
+  
+  //protected void connectionException(Exception exception) {
+	//}
+  
   
   /**
    * This method terminates the client.

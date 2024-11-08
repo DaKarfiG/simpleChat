@@ -4,6 +4,8 @@ package edu.seg2105.edu.server.backend;
 // license found at www.lloseng.com 
 
 
+import java.io.IOException;
+
 import ocsf.server.*;
 
 /**
@@ -24,6 +26,9 @@ public class EchoServer extends AbstractServer
    */
   final public static int DEFAULT_PORT = 5555;
   
+  //default message to send upon server shutdown
+  private static final String SERVER_SHUTDOWN_MSG = "The Server has been shutdown";
+
   //Constructors ****************************************************
   
   /**
@@ -71,6 +76,42 @@ public class EchoServer extends AbstractServer
     System.out.println
       ("Server has stopped listening for connections.");
   }
+  
+  //to send a message to all connected clients
+ /* public void sendShutdownMessageToClients() {
+	  try {
+		  //method to send msg to all clietns
+		  sendToAllClients(SERVER_SHUTDOWN_MSG);
+		  System.out.println("Sent shutdown message to all clients.");
+	  }
+	  catch(Exception e) {
+		  System.err.println("Failed to send shutdown message to clients.");
+          e.printStackTrace();
+	  }
+  }
+  
+  //graceful shutdown to notify clients closing connections
+  public void shutdownServer() {
+      System.out.println("Initiating server shutdown. Notifying clients...");
+      sendShutdownMessageToClients();
+      try {
+          // Wait briefly to ensure messages are sent
+          Thread.sleep(1000);
+      } catch (InterruptedException e) {
+          e.printStackTrace();
+      }
+
+      try {
+    	  //Close all client connections and stop the server
+          this.close(); 
+          System.out.println("Server has been shut down.");
+      } catch (IOException e) {
+          System.err.println("Error while shutting down the server.");
+          e.printStackTrace();
+      }
+  }
+  
+ */
   
   
   //Class methods ***************************************************
