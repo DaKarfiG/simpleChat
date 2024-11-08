@@ -53,18 +53,57 @@ public class EchoServer extends AbstractServer
   
   @Override
   protected void handleMessageFromClient(Object msg, ConnectionToClient client) {
-      String clientIp = client.getInetAddress().getHostAddress();
-      serverUI.display("Message received from " + clientIp + ": " + msg);
+      if (msg instanceof String) {
+          String message = (String) msg;
 
-      // Echo the message back to the client
-      try {
-          client.sendToClient(msg);
-      } catch (IOException e) {
-          serverUI.display("Error sending message to client: " + e.getMessage());
+          // Check if the client has a login ID
+          String loginID = (String) client.getInfo("loginID");
+
+          // If the client has not logged in yet
+          if (loginID == null) {
+              if (message.startsWith("#login ")) {
+                  // Extract login ID
+                  loginID = message.substring(7).trim();
+
+                  if (loginID.isEmpty()) {
+                      try {
+                          client.sendToClient("ERROR - Login ID cannot be empty. Connection closing.");
+                          client.close();
+                      } catch (IOException e) {
+                          // Ignore exception on close
+                      }
+                  } else {
+                      // Save the login ID
+                      client.setInfo("loginID", loginID);
+                      serverUI.display("Client " + client.getInetAddress().getHostAddress() + " logged in as: " + loginID);
+                  }
+              } else {
+                  // First message is not #login, send error and close connection
+                  try {
+                      client.sendToClient("ERROR - You must login first. Connection closing.");
+                      client.close();
+                  } catch (IOException e) {
+                      // Ignore exception on close
+                  }
+              }
+          } else {
+              // Client has already logged in
+              if (message.startsWith("#login ")) {
+                  // #login command received after initial login, send error and close connection
+                  try {
+                      client.sendToClient("ERROR - You are already logged in. Connection closing.");
+                      client.close();
+                  } catch (IOException e) {
+                      // Ignore exception on close
+                  }
+              } else {
+                  // Echo the message to all clients, prefixed with the login ID
+                  String fullMessage = loginID + ": " + message;
+                  serverUI.display(fullMessage);
+                  sendToAllClients(fullMessage);
+              }
+          }
       }
-
-      // Forward the message to all other clients
-      sendToAllClients(msg);
   }
   
   // Handle messages from the server UI
@@ -124,15 +163,12 @@ public class EchoServer extends AbstractServer
    */
   @Override
   synchronized protected void clientDisconnected(ConnectionToClient client) {
-      String clientIp = "Unknown";
-
-      // Retrieve the client's IP address using synchronized getInfo
-      Object ipObject = client.getInfo("ip");
-      if (ipObject != null) {
-          clientIp = (String) ipObject;
+      String clientIp = client.getInetAddress().getHostAddress();
+      String loginID = (String) client.getInfo("loginID");
+      if (loginID == null) {
+          loginID = "Unknown";
       }
-
-      System.out.println("A client has disconnected from IP: " + clientIp);
+      serverUI.display("Client " + loginID + " (" + clientIp + ") has disconnected.");
   }
 
   /**
@@ -143,20 +179,18 @@ public class EchoServer extends AbstractServer
    */
   @Override
   synchronized protected void clientException(ConnectionToClient client, Throwable exception) {
-      String clientIp = "Unknown";
-
-      // Retrieve the client's IP address using synchronized getInfo
-      Object ipObject = client.getInfo("ip");
-      if (ipObject != null) {
-          clientIp = (String) ipObject;
+	  String clientIp = client.getInetAddress().getHostAddress();
+      String loginID = (String) client.getInfo("loginID");
+      if (loginID == null) {
+          loginID = "Unknown";
       }
-
       if (exception instanceof IOException) {
-          System.out.println("A client has disconnected from IP: " + clientIp);
+          serverUI.display("Client " + loginID + " (" + clientIp + ") has disconnected unexpectedly.");
       } else {
-          System.out.println("An exception occurred with client at IP: " + clientIp + " - " + exception.getMessage());
+          serverUI.display("An exception occurred with client " + loginID + " (" + clientIp + "): " + exception.getMessage());
       }
   }
+
 
 
   
