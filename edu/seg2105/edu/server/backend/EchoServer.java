@@ -75,8 +75,20 @@ public class EchoServer extends AbstractServer
                   } else {
                       // Save the login ID
                       client.setInfo("loginID", loginID);
-                      serverUI.display("Client " + client.getInetAddress().getHostAddress() + " logged in as: " + loginID);
+                      
+                      //send confirmation to client
+                      try {
+                          client.sendToClient(loginID + " has logged on.");
+                      } catch (IOException e) {
+                          // Handle exception
+                      }
+
+                      // Display login message on server console
+                      serverUI.display("Message received: #login " + loginID + " from null.");
+                      serverUI.display(loginID + " has logged on.");
                   }
+                  
+              
               } else {
                   // First message is not #login, send error and close connection
                   try {
@@ -87,28 +99,20 @@ public class EchoServer extends AbstractServer
                   }
               }
           } else {
-              // Client has already logged in
-              if (message.startsWith("#login ")) {
-                  // #login command received after initial login, send error and close connection
-                  try {
-                      client.sendToClient("ERROR - You are already logged in. Connection closing.");
-                      client.close();
-                  } catch (IOException e) {
-                      // Ignore exception on close
-                  }
-              } else {
-                  // Echo the message to all clients, prefixed with the login ID
-                  String fullMessage = loginID + ": " + message;
-                  serverUI.display(fullMessage);
-                  sendToAllClients(fullMessage);
-              }
+              
+              serverUI.display("Message received: " + message + " from " + loginID);
+
+              // Echo the message to all clients, prefixed with the login ID
+              String fullMessage = loginID + "> " + message;
+              sendToAllClients(fullMessage);
           }
       }
   }
   
+  
   // Handle messages from the server UI
   public void handleMessageFromServerUI(String message) {
-      String fullMessage = "SERVER MSG> " + message;
+      String fullMessage = "SERVER MESSAGE> " + message;
       serverUI.display(fullMessage);
       sendToAllClients(fullMessage);
   }
@@ -119,8 +123,7 @@ public class EchoServer extends AbstractServer
    */
   protected void serverStarted()
   {
-    System.out.println
-      ("Server listening for connections on port " + getPort());
+	  serverUI.display("Server listening for clients on port " + getPort());
   }
   
   /**
@@ -144,18 +147,10 @@ public class EchoServer extends AbstractServer
    * @param client The connection connected to the client.
    */
   @Override
-  protected void clientConnected(ConnectionToClient client) {
-      String clientIp = "Unknown";
-      if (client != null && client.getInetAddress() != null) {
-          clientIp = client.getInetAddress().getHostAddress();
-      }
-
-      // Store the client's IP address using synchronized setInfo
-      client.setInfo("ip", clientIp);
-
-      System.out.println("A client has connected from IP: " + clientIp);
+  synchronized protected void clientConnected(ConnectionToClient client) {
+      
+      serverUI.display("A new client has connected to the server.");
   }
-
   /**
    * This method is called each time a client disconnects.
    *
@@ -163,12 +158,11 @@ public class EchoServer extends AbstractServer
    */
   @Override
   synchronized protected void clientDisconnected(ConnectionToClient client) {
-      String clientIp = client.getInetAddress().getHostAddress();
       String loginID = (String) client.getInfo("loginID");
       if (loginID == null) {
           loginID = "Unknown";
       }
-      serverUI.display("Client " + loginID + " (" + clientIp + ") has disconnected.");
+      serverUI.display(loginID + " has disconnected.");
   }
 
   /**
@@ -179,15 +173,15 @@ public class EchoServer extends AbstractServer
    */
   @Override
   synchronized protected void clientException(ConnectionToClient client, Throwable exception) {
-	  String clientIp = client.getInetAddress().getHostAddress();
       String loginID = (String) client.getInfo("loginID");
       if (loginID == null) {
           loginID = "Unknown";
       }
+
       if (exception instanceof IOException) {
-          serverUI.display("Client " + loginID + " (" + clientIp + ") has disconnected unexpectedly.");
+          serverUI.display(loginID + " has disconnected unexpectedly.");
       } else {
-          serverUI.display("An exception occurred with client " + loginID + " (" + clientIp + "): " + exception.getMessage());
+          serverUI.display("An exception occurred with client " + loginID + ": " + exception.getMessage());
       }
   }
 

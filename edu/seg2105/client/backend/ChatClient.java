@@ -81,10 +81,12 @@ public class ChatClient extends AbstractClient
   
   @Override
   protected void connectionException(Exception exception) {
-	  if(!isConnected()) {
+      if (exception instanceof IOException) {
+          clientUI.display("The server has shut down.");
+      } else {
           clientUI.display("Connection exception: " + exception.getMessage());
-          System.exit(0);
       }
+      System.exit(0);
   }
 
   // Getter for loginID
