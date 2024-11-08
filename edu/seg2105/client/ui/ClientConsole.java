@@ -76,24 +76,85 @@ public class ClientConsole implements ChatIF
    * This method waits for input from the console.  Once it is 
    * received, it sends it to the client's message handler.
    */
-  public void accept() 
-  {
-    try
-    {
+  public void accept() {
+	    try {
+	        String message;
+	        while (true) {
+	            message = fromConsole.nextLine();
+	            if (message.startsWith("#")) {
+	            	//call method to handle next input after #
+	                handleCommand(message);
+	            } else {
+	                client.handleMessageFromClientUI(message);
+	            }
+	        }
+	    } catch (Exception ex) {
+	        System.out.println("Unexpected error while reading from console");
+	        ex.printStackTrace();
+	    }
+	}
+  
+//Handle commands starting with '#'
+  private void handleCommand(String message) {
+      String[] tokens = message.split(" ");
+      String command = tokens[0];
 
-      String message;
+      switch (command) {
+          case "#quit":
+              client.quit();
+              break;
 
-      while (true) 
-      {
-        message = fromConsole.nextLine();
-        client.handleMessageFromClientUI(message);
+          case "#logoff":
+              client.logoff();
+              break;
+
+          case "#sethost":
+              if (tokens.length < 2) {
+                  display("Usage: #sethost <host>");
+              } else {
+                  if (client.isConnected()) {
+                      display("Cannot set host while connected. Please log off first.");
+                  } else {
+                      client.setHost(tokens[1]);
+                      display("Host set to " + client.getHost());
+                  }
+              }
+              break;
+
+          case "#setport":
+              if (tokens.length < 2) {
+                  display("Usage: #setport <port>");
+              } else {
+                  if (client.isConnected()) {
+                      display("Cannot set port while connected. Please log off first.");
+                  } else {
+                      try {
+                          int port = Integer.parseInt(tokens[1]);
+                          client.setPort(port);
+                          display("Port set to " + client.getPort());
+                      } catch (NumberFormatException e) {
+                          display("Port must be a number.");
+                      }
+                  }
+              }
+              break;
+
+          case "#login":
+              client.login();
+              break;
+
+          case "#gethost":
+              display("Current host: " + client.getHost());
+              break;
+
+          case "#getport":
+              display("Current port: " + client.getPort());
+              break;
+
+          default:
+              display("Unknown command: " + command);
+              break;
       }
-    } 
-    catch (Exception ex) 
-    {
-      System.out.println
-        ("Unexpected error while reading from console!");
-    }
   }
 
   /**

@@ -84,6 +84,29 @@ public class ChatClient extends AbstractClient
       }
   }
 
+  //print when logoff called
+  public void logoff() {
+      try {
+          closeConnection();
+          clientUI.display("You have logged off.");
+      } catch (IOException e) {
+          clientUI.display("Error logging off: " + e.getMessage());
+      }
+  }
+  
+  //print when called on existing connection and when logging in on disconnected client
+  public void login() {
+      if (isConnected()) {
+          clientUI.display("You are already connected.");
+      } else {
+          try {
+              openConnection();
+              clientUI.display("You have logged in.");
+          } catch (IOException e) {
+              clientUI.display("Error logging in: " + e.getMessage());
+          }
+      }
+  }
   /**
    * This method handles all data coming from the UI            
    *
@@ -103,16 +126,7 @@ public class ChatClient extends AbstractClient
       quit();
     }
   }
-  //@Override
-  //protected void connectionClosed() {
-	  
-	  //if()
-	  
-	//}
-  
-  //protected void connectionException(Exception exception) {
-	//}
-  
+ 
   
   /**
    * This method terminates the client.

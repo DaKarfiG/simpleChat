@@ -5,7 +5,7 @@ package edu.seg2105.edu.server.backend;
 
 
 import java.io.IOException;
-
+import edu.seg2105.client.common.ChatIF;
 import ocsf.server.*;
 
 /**
@@ -26,6 +26,7 @@ public class EchoServer extends AbstractServer
    */
   final public static int DEFAULT_PORT = 5555;
   
+  private ChatIF serverUI;
 
   //Constructors ****************************************************
   
@@ -34,9 +35,10 @@ public class EchoServer extends AbstractServer
    *
    * @param port The port number to connect on.
    */
-  public EchoServer(int port) 
+  public EchoServer(int port, ChatIF serverUI) 
   {
     super(port);
+    this.serverUI = serverUI;
   }
 
   
@@ -51,21 +53,25 @@ public class EchoServer extends AbstractServer
   
   @Override
   protected void handleMessageFromClient(Object msg, ConnectionToClient client) {
-      String clientIp = "Unknown";
+      String clientIp = client.getInetAddress().getHostAddress();
+      serverUI.display("Message received from " + clientIp + ": " + msg);
 
-      // Retrieve the client's IP address using synchronized getInfo
-      Object ipObject = client.getInfo("ip");
-      if (ipObject != null) {
-          clientIp = (String) ipObject;
-      }
-
-      System.out.println("Message received from " + clientIp + ": " + msg);
-
+      // Echo the message back to the client
       try {
           client.sendToClient(msg);
       } catch (IOException e) {
-          System.out.println("Error sending message to client: " + e.getMessage());
+          serverUI.display("Error sending message to client: " + e.getMessage());
       }
+
+      // Forward the message to all other clients
+      sendToAllClients(msg);
+  }
+  
+  // Handle messages from the server UI
+  public void handleMessageFromServerUI(String message) {
+      String fullMessage = "SERVER MSG> " + message;
+      serverUI.display(fullMessage);
+      sendToAllClients(fullMessage);
   }
     
   /**
@@ -87,6 +93,12 @@ public class EchoServer extends AbstractServer
     System.out.println
       ("Server has stopped listening for connections.");
   }
+  
+  @Override
+  protected void serverClosed() {
+      serverUI.display("Server closed.");
+  }
+
   /**
    * This method is called each time a new client connection is accepted.
    *
@@ -140,7 +152,7 @@ public class EchoServer extends AbstractServer
       }
 
       if (exception instanceof IOException) {
-          System.out.println("A client has disconnected unexpectedly from IP: " + clientIp);
+          System.out.println("A client has disconnected from IP: " + clientIp);
       } else {
           System.out.println("An exception occurred with client at IP: " + clientIp + " - " + exception.getMessage());
       }
@@ -156,7 +168,7 @@ public class EchoServer extends AbstractServer
    *
    * @param args[0] The port number to listen on. Defaults to 5555 if no argument is supplied.
    */
-  public static void main(String[] args) {
+  /*public static void main(String[] args) {
       int port = DEFAULT_PORT; // Port to listen on
 
       try {
@@ -167,7 +179,14 @@ public class EchoServer extends AbstractServer
           System.out.println("Invalid port number. Using default port " + DEFAULT_PORT);
       }
 
-      EchoServer server = new EchoServer(port);
+      ChatIF serverUI = new ChatIF() {
+          @Override
+          public void display(String message) {
+              System.out.println(message);
+          }
+      };
+      
+      EchoServer server = new EchoServer(port, serverUI);
 
       try {
           server.listen(); // Start listening for connections
@@ -175,6 +194,16 @@ public class EchoServer extends AbstractServer
       } catch (Exception ex) {
           System.out.println("Error: Could not start server");
       }
+  }
+  */
+//Quit the server
+  public void quit() {
+      try {
+          close();
+      } catch (IOException e) {
+          // Ignore exceptions on close
+      }
+      System.exit(0);
   }
 }
 //End of EchoServer class
