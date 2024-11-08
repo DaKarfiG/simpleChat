@@ -115,21 +115,49 @@ public class ClientConsole implements ChatIF
    *
    * @param args[0] The host to connect to.
    */
+  /**
+   * This method is responsible for the creation of the Client UI.
+   *
+   * @param args[0] The host to connect to.
+   */
   public static void main(String[] args) 
   {
-    String host = "";
+      String host = "localhost"; // Default host
+      int port = DEFAULT_PORT;   // Default port
 
+      try
+      {
+          if (args.length > 0)
+          {
+        	//First argument is host
+              host = args[0]; 
 
-    try
-    {
-      host = args[0];
-    }
-    catch(ArrayIndexOutOfBoundsException e)
-    {
-      host = "localhost";
-    }
-    ClientConsole chat= new ClientConsole(host, DEFAULT_PORT);
-    chat.accept();  //Wait for console data
+              if (args.length > 1)
+              {
+            	//Second argument is port
+                  port = Integer.parseInt(args[1]); 
+
+                  //Validate port number range
+                  if (port < 1 || port > 65535)
+                  {
+                      System.out.println("Port number must be between 1 and 65535.");
+                      System.exit(1);
+                  }
+              }
+          }
+      }
+      catch (ArrayIndexOutOfBoundsException e)
+      {
+          //No arguments provided; defaults are already set
+      }
+      catch (NumberFormatException e)
+      {
+          System.out.println("Invalid port number. Please enter a valid integer.");
+          System.exit(1);
+      }
+
+      ClientConsole chat = new ClientConsole(host, port);
+      chat.accept();  // Wait for console data
   }
 }
 //End of ConsoleChat class

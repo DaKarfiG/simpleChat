@@ -77,41 +77,6 @@ public class EchoServer extends AbstractServer
       ("Server has stopped listening for connections.");
   }
   
-  //to send a message to all connected clients
- /* public void sendShutdownMessageToClients() {
-	  try {
-		  //method to send msg to all clietns
-		  sendToAllClients(SERVER_SHUTDOWN_MSG);
-		  System.out.println("Sent shutdown message to all clients.");
-	  }
-	  catch(Exception e) {
-		  System.err.println("Failed to send shutdown message to clients.");
-          e.printStackTrace();
-	  }
-  }
-  
-  //graceful shutdown to notify clients closing connections
-  public void shutdownServer() {
-      System.out.println("Initiating server shutdown. Notifying clients...");
-      sendShutdownMessageToClients();
-      try {
-          // Wait briefly to ensure messages are sent
-          Thread.sleep(1000);
-      } catch (InterruptedException e) {
-          e.printStackTrace();
-      }
-
-      try {
-    	  //Close all client connections and stop the server
-          this.close(); 
-          System.out.println("Server has been shut down.");
-      } catch (IOException e) {
-          System.err.println("Error while shutting down the server.");
-          e.printStackTrace();
-      }
-  }
-  
- */
   
   
   //Class methods ***************************************************
